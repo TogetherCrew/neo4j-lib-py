@@ -11,7 +11,7 @@ class Neo4jOps:
         """
         neo4j utility functions
         """
-        ## Neo4J credentials
+        # Neo4J credentials
         self.neo4j_db_name: Optional[str] = None
         self.neo4j_protocol: Optional[str] = None
         self.neo4j_host: Optional[str] = None
@@ -119,7 +119,7 @@ class Neo4jOps:
             )
 
         try:
-            ## splitting the transactions
+            # splitting the transactions
             queries_idx = list(range(len(query_list)))[::session_batch]
             if len(queries_idx) > 1:
                 logging.info(

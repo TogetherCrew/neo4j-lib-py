@@ -1,5 +1,4 @@
 import os
-
 from dotenv import load_dotenv
 
 from tc_neo4j_lib import Neo4jOps
@@ -84,7 +83,7 @@ def test_neo4j_data_insertion():
     )
 
     insertion_query = """
-        CREATE (a:Account {userId: "acc1"}) 
+        CREATE (a:Account {userId: "acc1"})
             -[r:INTERACTED]->(b: Account {userId: "acc2"})
         """
     neo4j_ops.store_data_neo4j([insertion_query], message="SAMPLE INSERTION: ")
