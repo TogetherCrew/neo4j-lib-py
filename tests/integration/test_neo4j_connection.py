@@ -1,6 +1,5 @@
-import os
 from dotenv import load_dotenv
-
+import os
 from tc_neo4j_lib import Neo4jOps
 
 
