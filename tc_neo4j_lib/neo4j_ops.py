@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from graphdatascience import GraphDataScience
-from neo4j import GraphDatabase, Transaction, Driver
+from neo4j import Driver, GraphDatabase, Transaction
 from neo4j.exceptions import ClientError, DatabaseError, TransientError
 
 
@@ -12,7 +12,7 @@ class Neo4jOps:
         neo4j utility functions
         """
         ## Neo4J credentials
-        self.neo4j_dbName: Optional[str] = None
+        self.neo4j_db_name: Optional[str] = None
         self.neo4j_protocol: Optional[str] = None
         self.neo4j_host: Optional[str] = None
         self.neo4j_port: Optional[str] = None
@@ -53,14 +53,14 @@ class Neo4jOps:
 
         self.neo4j_url = url
         self.neo4j_auth = neo4j_auth
-        self.neo4j_dbName = neo4j_db_name
+        self.neo4j_db_name = neo4j_db_name
 
     def neo4j_database_connect(self) -> None:
         """
         connect to neo4j database and set the database driver it the class
         """
         with GraphDatabase.driver(
-            self.neo4j_url, auth=self.neo4j_auth, database=self.neo4j_dbName
+            self.neo4j_url, auth=self.neo4j_auth, database=self.neo4j_db_name
         ) as driver:
             driver.verify_connectivity()
 
@@ -127,7 +127,7 @@ class Neo4jOps:
                 )
             for session_number, index in enumerate(queries_idx):
                 queries = query_list[index : index + session_batch]
-                with self.neo4j_driver.session(database=self.neo4j_dbName) as session:
+                with self.neo4j_driver.session(database=self.neo4j_db_name) as session:
                     with session.begin_transaction() as tx:
                         query_count = len(queries)
                         for idx, query in enumerate(queries):

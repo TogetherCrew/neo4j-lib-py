@@ -1,5 +1,7 @@
 import os
+
 from dotenv import load_dotenv
+
 from tc_neo4j_lib import Neo4jOps
 
 
@@ -33,7 +35,6 @@ def test_neo4j_connection():
     host = os.getenv("NEO4J_HOST")
     port = os.getenv("NEO4J_PORT")
 
-    url = f"{protocol}://{host}:{port}"
     user = os.getenv("NEO4J_USER")
     password = os.getenv("NEO4J_PASSWORD")
     db_name = os.getenv("NEO4J_DB")
@@ -42,7 +43,9 @@ def test_neo4j_connection():
 
     neo4j_ops.set_neo4j_db_info(
         neo4j_db_name=db_name,
-        neo4j_url=url,
+        neo4j_protocol=protocol,
+        neo4j_host=host,
+        neo4j_port=port,
         neo4j_user=user,
         neo4j_password=password,
     )
@@ -57,7 +60,6 @@ def test_neo4j_data_insertion():
     host = os.getenv("NEO4J_HOST")
     port = os.getenv("NEO4J_PORT")
 
-    url = f"{protocol}://{host}:{port}"
     user = os.getenv("NEO4J_USER")
     password = os.getenv("NEO4J_PASSWORD")
     db_name = os.getenv("NEO4J_DB")
@@ -66,7 +68,9 @@ def test_neo4j_data_insertion():
 
     neo4j_ops.set_neo4j_db_info(
         neo4j_db_name=db_name,
-        neo4j_url=url,
+        neo4j_protocol=protocol,
+        neo4j_host=host,
+        neo4j_port=port,
         neo4j_user=user,
         neo4j_password=password,
     )
@@ -93,4 +97,4 @@ def test_neo4j_data_insertion():
     )
 
     print(result)
-    assert all(["acc1", "acc2"] == result.userId.values)
+    assert all(["acc1", "acc2"] == result["userId"].values)

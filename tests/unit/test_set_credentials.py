@@ -24,8 +24,8 @@ def test_neo4j_creds_set():
         neo4j_password=password,
     )
 
-    assert neo4j_ops.neo4j_dbName == db_name
-    assert neo4j_ops.neo4j_protocol == protocol
-    assert neo4j_ops.neo4j_host == host
-    assert neo4j_ops.neo4j_port == port
+    url = f"{protocol}://{host}:{port}"
+
+    assert neo4j_ops.neo4j_db_name == db_name
+    assert neo4j_ops.neo4j_url == url
     assert neo4j_ops.neo4j_auth == (user, password)
