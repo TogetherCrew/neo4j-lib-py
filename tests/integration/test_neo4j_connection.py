@@ -1,6 +1,7 @@
 import os
-from tc_neo4j_lib import Neo4jOps
+
 from dotenv import load_dotenv
+from tc_neo4j_lib import Neo4jOps
 
 
 def test_neo4j_env_variables():
