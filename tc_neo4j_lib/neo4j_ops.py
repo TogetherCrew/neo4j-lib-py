@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from graphdatascience import GraphDataScience
-from neo4j import GraphDatabase, Transaction
+from neo4j import GraphDatabase, Transaction, Driver
 from neo4j.exceptions import ClientError, DatabaseError, TransientError
 
 
@@ -12,17 +12,22 @@ class Neo4jOps:
         neo4j utility functions
         """
         ## Neo4J credentials
-        self.neo4j_dbName = None
-        self.neo4j_url = None
-        self.neo4j_auth = (None, None)
-        self.neo4j_driver = None
+        self.neo4j_dbName: Optional[str] = None
+        self.neo4j_protocol: Optional[str] = None
+        self.neo4j_host: Optional[str] = None
+        self.neo4j_port: Optional[str] = None
+        self.neo4j_auth: tuple[Optional[str], Optional[str]] = (None, None)
+        self.neo4j_driver: Optional[Driver] = None
+        self.gds: Optional[GraphDataScience] = None
 
     def set_neo4j_db_info(
         self,
-        neo4j_db_name: Optional[str],
-        neo4j_url: Optional[str],
-        neo4j_user: Optional[str],
-        neo4j_password: Optional[str],
+        neo4j_db_name: str,
+        neo4j_protocol: str,
+        neo4j_host: str,
+        neo4j_port: str,
+        neo4j_user: str,
+        neo4j_password: str,
     ) -> None:
         """
         Neo4j Database information setter
@@ -31,8 +36,12 @@ class Neo4jOps:
         -------------
         neo4j_db_ame : str
             the database name to save the results in it
-        neo4j_url : str
-            the string of neo4j url
+        neo4j_protocol : str
+            the protocol we're using to connect to neo4j
+        neo4j_host : str
+            our neo4j host ip or domain
+        neo4j_port : str
+            the port of neo4j to connect
         neo4j_user : str
             neo4j username to connect
         neo4j_password : str
@@ -40,7 +49,9 @@ class Neo4jOps:
         """
         neo4j_auth = (neo4j_user, neo4j_password)
 
-        self.neo4j_url = neo4j_url
+        url = f"{neo4j_protocol}://{neo4j_host}:{neo4j_port}"
+
+        self.neo4j_url = url
         self.neo4j_auth = neo4j_auth
         self.neo4j_dbName = neo4j_db_name
 
@@ -48,7 +59,9 @@ class Neo4jOps:
         """
         connect to neo4j database and set the database driver it the class
         """
-        with GraphDatabase.driver(self.neo4j_url, auth=self.neo4j_auth) as driver:
+        with GraphDatabase.driver(
+            self.neo4j_url, auth=self.neo4j_auth, database=self.neo4j_dbName
+        ) as driver:
             driver.verify_connectivity()
 
         self.neo4j_driver = driver
@@ -100,6 +113,11 @@ class Neo4jOps:
             the number of queries to run in one session
             default is 30K transactions
         """
+        if self.neo4j_driver is None:
+            raise ConnectionError(
+                "first connect to neo4j using the method neo4j_database_connect"
+            )
+
         try:
             ## splitting the transactions
             queries_idx = list(range(len(query_list)))[::session_batch]
@@ -118,7 +136,6 @@ class Neo4jOps:
                             logging.info(
                                 f"{message} {msg_title}: Batch {idx + 1}/{query_count}"
                             )
-                            # session.execute_write(self._run_query, query=query)
                             self._run_query(tx, query)
         except Exception as e:
             logging.error(f"Couldn't execute  Neo4J DB transaction, exception: {e}")

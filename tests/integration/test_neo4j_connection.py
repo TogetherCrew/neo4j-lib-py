@@ -1,7 +1,5 @@
 import os
-
 from dotenv import load_dotenv
-
 from tc_neo4j_lib import Neo4jOps
 
 
@@ -87,7 +85,7 @@ def test_neo4j_data_insertion():
         """
     neo4j_ops.store_data_neo4j([insertion_query], message="SAMPLE INSERTION: ")
 
-    ## using the gds driver to retreive the data
+    # using the gds driver to retreive the data
     result = neo4j_ops.gds.run_cypher(
         """
         MATCH (a: Account) RETURN a.userId as userId
