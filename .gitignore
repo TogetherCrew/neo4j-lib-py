@@ -1,3 +1,7 @@
 coverage/*
+.coverage
 .DS_store
+.env
+neo4j-lib/*
+__pycache__
 .env

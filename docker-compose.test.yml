@@ -8,16 +8,6 @@ services:
       dockerfile: Dockerfile
     environment:
       - PORT=3000
-      - SAMPLE_ENV=sample_env
-      - DB_HOST=mongo
-      - DB_PORT=27017
-      - DB_USER=root
-      - DB_NAME=RnDAO
-      - DB_PASSWORD=pass
-      - RABBIT_HOST=rabbitmq
-      - RABBIT_PORT=5672
-      - RABBIT_USER=root
-      - RABBIT_PASSWORD=pass
       - NEO4J_PROTOCOL=bolt
       - NEO4J_HOST=neo4j
       - NEO4J_PORT=7687
@@ -29,23 +19,8 @@ services:
     volumes:
       - ./coverage:/project/coverage
     depends_on:
-      mongo:
-        condition: service_healthy
       neo4j:
         condition: service_healthy
-      rabbitmq: 
-        condition: service_healthy
-  mongo:
-    image: "mongo:6.0.8"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=pass
-    healthcheck:
-      test: echo 'db.stats().ok' | mongosh localhost:27017/test --quiet
-      interval: 60s
-      timeout: 10s
-      retries: 2
-      start_period: 40s
   neo4j:
     image: "neo4j:5.9.0"
     environment:
@@ -56,16 +31,5 @@ services:
       test: ["CMD" ,"wget", "http://localhost:7474"]
       interval: 1m30s
       timeout: 10s
-      retries: 2
-      start_period: 40s
-  rabbitmq:
-    image: "rabbitmq:3-management-alpine"
-    environment:
-      - RABBITMQ_DEFAULT_USER=root
-      - RABBITMQ_DEFAULT_PASS=pass
-    healthcheck:
-      test: rabbitmq-diagnostics -q ping
-      interval: 30s
-      timeout: 30s
       retries: 2
       start_period: 40s

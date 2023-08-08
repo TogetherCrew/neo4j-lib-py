@@ -3,6 +3,5 @@ pytest==7.2.0
 pytest-cov==4.0.0
 coverage==7.2.5
 python-dotenv==0.21.1
-tc_messageBroker==1.4.0
-pymongo==4.3.3
 neo4j==5.8.0
+graphdatascience==1.7
