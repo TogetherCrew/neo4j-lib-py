@@ -13,7 +13,7 @@ def test_neo4j_creds_set():
     port = "port"
 
     user = "username"
-    password = "password"  #gitleaks:allow
+    password = "password"  # gitleaks:allow
 
     neo4j_ops.set_neo4j_db_info(
         neo4j_db_name=db_name,
