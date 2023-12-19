@@ -13,7 +13,8 @@ def test_neo4j_creds_set():
     port = "port"
 
     user = "username"
-    password = "123456789"
+    # GITLEAKS-IGNORE: hashicorp-tf-password
+    password = "password"
 
     neo4j_ops.set_neo4j_db_info(
         neo4j_db_name=db_name,
