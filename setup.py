@@ -6,7 +6,7 @@ with open("requirements.txt") as f:
 
 setup(
     name="tc-neo4j-lib",
-    version="1.0.0",
+    version="1.0.1",
     author="Mohammad Amin Dadgar, TogetherCrew",
     maintainer="Mohammad Amin Dadgar",
     maintainer_email="dadgaramin96@gmail.com",
