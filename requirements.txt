@@ -1,7 +1,7 @@
-numpy==1.24.1
-pytest==7.2.0
-pytest-cov==4.0.0
-coverage==7.2.5
+numpy>=1.24.1
+pytest>=7.2.0, <8.0.0
+pytest-cov>=4.0.0, <6.0.0
+coverage>=7.2.5
 python-dotenv==1.0.0
-neo4j==5.8.0
-graphdatascience==1.7
+neo4j>=5.14.1, <6.0.0
+graphdatascience>=1.7
