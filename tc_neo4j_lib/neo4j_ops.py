@@ -8,16 +8,26 @@ from .schema import Query
 
 
 class Neo4jOps:
-    # TODO: Make Singleton
+    __instance = None
+
     def __init__(self) -> None:
         """
         neo4j utility functions
         """
-        self.db_name: str | None = None
-        self.neo4j_driver: Driver | None = None
-        self.gds: GraphDataScience | None = None
+        if Neo4jOps.__instance is not None:
+            raise Exception("Singletone class! use `get_instance` method always.")
+        else:
+            self._neo4j_database_connect()
+            Neo4jOps.__instance = self
 
-    def neo4j_database_connect(self) -> None:
+    @staticmethod
+    def get_instance():
+        if Neo4jOps.__instance is None:
+            Neo4jOps()
+
+        return Neo4jOps.__instance
+
+    def _neo4j_database_connect(self) -> None:
         """
         connect to neo4j database and set the database driver it the class
         """
@@ -77,10 +87,6 @@ class Neo4jOps:
             the number of queries to run in one session
             default is 30K transactions
         """
-        if self.neo4j_driver is None:
-            raise ConnectionError(
-                "first connect to neo4j using the method neo4j_database_connect"
-            )
         try:
             # splitting the transactions
             queries_idx = list(range(len(queries)))[::session_batch]
