@@ -1,8 +1,9 @@
 import logging
 
 from graphdatascience import GraphDataScience
-from neo4j import Driver, GraphDatabase, Transaction
+from neo4j import GraphDatabase, Transaction
 from neo4j.exceptions import ClientError, DatabaseError, TransientError
+
 from .credentials import load_neo4j_credentials
 from .schema import Query
 

@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 
-def load_neo4j_credentials() -> dict[str, str]:
+def load_neo4j_credentials() -> dict[str, tuple[str, str] | str]:
     """
     load neo4j credentials
 
