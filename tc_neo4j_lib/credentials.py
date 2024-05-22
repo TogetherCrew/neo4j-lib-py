@@ -24,14 +24,7 @@ def load_neo4j_credentials() -> dict[str, tuple[str, str] | str]:
     user = os.getenv("NEO4J_USER")
     password = os.getenv("NEO4J_PASSWORD")
 
-    if (
-        protocol is None
-        or host is None
-        or port is None
-        or db_name is None
-        or user is None
-        or password is None
-    ):
+    if any(var is None for var in [protocol, host, port, db_name, user, password]):
         raise ValueError("At least one of the neo4j credentials is missing!")
 
     url = f"{protocol}://{host}:{port}"
