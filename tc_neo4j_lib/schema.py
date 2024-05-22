@@ -6,7 +6,7 @@ class Query:
         """
         A schema for passing neo4j query
 
-        Paramters
+        Parameters
         ------------
         query : str
             the actual query to pass to neo4j driver
