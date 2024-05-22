@@ -41,6 +41,8 @@ class Neo4jOps:
         self.db_name = creds["db_name"]
 
         self.neo4j_driver = GraphDatabase.driver(url, auth=auth, database=self.db_name)
+        self.neo4j_driver.verify_connectivity()
+
         self.gds = GraphDataScience(url, auth)
 
     def _run_query(self, tx: Transaction, query: str, **kwargs) -> None:
