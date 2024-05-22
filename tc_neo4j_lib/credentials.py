@@ -36,7 +36,7 @@ def load_neo4j_credentials() -> dict[str, tuple[str, str] | str]:
 
     url = f"{protocol}://{host}:{port}"
 
-    creds: dict[str, str] = {
+    creds: dict[str, tuple[str, str] | str] = {
         "auth": (user, password),
         "url": url,
         "db_name": db_name,
