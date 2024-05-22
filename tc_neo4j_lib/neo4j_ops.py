@@ -97,12 +97,12 @@ class Neo4jOps:
                     f"{message} huge query count, doing operations in multi-session"
                 )
             for session_number, index in enumerate(queries_idx):
-                queries = queries[index : index + session_batch]
+                batch_queries = queries[index : index + session_batch]
                 with self.neo4j_driver.session(database=self.db_name) as session:
                     with session.begin_transaction() as tx:
-                        query_count = len(queries)
+                        query_count = len(batch_queries)
 
-                        for idx, query_item in enumerate(queries):
+                        for idx, query_item in enumerate(batch_queries):
                             query = query_item.query
                             query_parameters = query_item.parameters
 
