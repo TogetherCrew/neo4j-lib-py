@@ -1,4 +1,5 @@
 import logging
+import threading
 
 from graphdatascience import GraphDataScience
 from neo4j import GraphDatabase, Transaction
@@ -24,8 +25,9 @@ class Neo4jOps:
     @staticmethod
     def get_instance():
         if Neo4jOps.__instance is None:
-            Neo4jOps()
-
+            with threading.Lock():
+                if Neo4jOps.__instance is None:  # Double-checked locking
+                    Neo4jOps()
         return Neo4jOps.__instance
 
     def _neo4j_database_connect(self) -> None:
