@@ -1,78 +1,51 @@
 import logging
-from typing import Optional
+import threading
 
 from graphdatascience import GraphDataScience
-from neo4j import Driver, GraphDatabase, Transaction
+from neo4j import GraphDatabase, Transaction
 from neo4j.exceptions import ClientError, DatabaseError, TransientError
+
+from .credentials import load_neo4j_credentials
+from .schema import Query
 
 
 class Neo4jOps:
+    __instance = None
+
     def __init__(self) -> None:
         """
         neo4j utility functions
         """
-        # Neo4J credentials
-        self.neo4j_db_name: Optional[str] = None
-        self.neo4j_protocol: Optional[str] = None
-        self.neo4j_host: Optional[str] = None
-        self.neo4j_port: Optional[str] = None
-        self.neo4j_auth: tuple[Optional[str], Optional[str]] = (None, None)
-        self.neo4j_driver: Optional[Driver] = None
-        self.gds: Optional[GraphDataScience] = None
+        if Neo4jOps.__instance is not None:
+            raise Exception("Singletone class! use `get_instance` method always.")
+        else:
+            self._neo4j_database_connect()
+            Neo4jOps.__instance = self
 
-    def set_neo4j_db_info(
-        self,
-        neo4j_db_name: str,
-        neo4j_protocol: str,
-        neo4j_host: str,
-        neo4j_port: str,
-        neo4j_user: str,
-        neo4j_password: str,
-    ) -> None:
-        """
-        Neo4j Database information setter
+    @staticmethod
+    def get_instance():
+        if Neo4jOps.__instance is None:
+            with threading.Lock():
+                if Neo4jOps.__instance is None:  # Double-checked locking
+                    Neo4jOps()
+        return Neo4jOps.__instance
 
-        Parameters:
-        -------------
-        neo4j_db_ame : str
-            the database name to save the results in it
-        neo4j_protocol : str
-            the protocol we're using to connect to neo4j
-        neo4j_host : str
-            our neo4j host ip or domain
-        neo4j_port : str
-            the port of neo4j to connect
-        neo4j_user : str
-            neo4j username to connect
-        neo4j_password : str
-            neo4j database password
-        """
-        neo4j_auth = (neo4j_user, neo4j_password)
-
-        url = f"{neo4j_protocol}://{neo4j_host}:{neo4j_port}"
-
-        self.neo4j_url = url
-        self.neo4j_auth = neo4j_auth
-        self.neo4j_db_name = neo4j_db_name
-
-    def neo4j_database_connect(self) -> None:
+    def _neo4j_database_connect(self) -> None:
         """
         connect to neo4j database and set the database driver it the class
         """
-        with GraphDatabase.driver(
-            self.neo4j_url, auth=self.neo4j_auth, database=self.neo4j_db_name
-        ) as driver:
-            driver.verify_connectivity()
+        creds = load_neo4j_credentials()
 
-        self.neo4j_driver = driver
-        self.gds = self.setup_gds()
+        url = creds["url"]
+        auth = creds["auth"]
+        self.db_name = creds["db_name"]
 
-    def setup_gds(self):
-        gds = GraphDataScience(self.neo4j_url, self.neo4j_auth)
+        self.neo4j_driver = GraphDatabase.driver(url, auth=auth, database=self.db_name)
+        self.neo4j_driver.verify_connectivity()
 
-        return gds
+        self.gds = GraphDataScience(url, auth)
 
-    def _run_query(self, tx: Transaction, query: str) -> None:
+    def _run_query(self, tx: Transaction, query: str, **kwargs) -> None:
         """
         handle neo4j queries in a transaction
 
@@ -82,9 +55,11 @@ class Neo4jOps:
             the transaction instance for neo4j python driver
         query : str
             the query to run for neo4j
+        **kwargs : dict[str, Any]
+            the parameters for the neo4j query
         """
         try:
-            tx.run(query)
+            tx.run(query, kwargs)
         except TransientError as err:
             logging.error("Neo4j transient error!")
             logging.error(f"Code: {err.code}, message: {err.message}")
@@ -95,16 +70,17 @@ class Neo4jOps:
             logging.error("Neo4j Client Error!")
             logging.error(f"Code: {err.code}, message: {err.message}")
 
-    def store_data_neo4j(
-        self, query_list: list[str], message: str = "", session_batch: int = 30000
+    def run_queries_in_batch(
+        self, queries: list[Query], message: str = "", session_batch: int = 30000
     ) -> None:
         """
         store data into neo4j using the given query list
 
         Parameters:
         ------------
-        query_list : list[str]
-            list of strings to add data into neo4j
+        queries : list[neo4j_lib_py.schema.Query]
+            list of tuples with lenght of 2. the first index is the neo4j query
+            and the second index is the neo4j query parameters
             min length is 1
         message : str
             the message to be printed out
@@ -113,29 +89,28 @@ class Neo4jOps:
             the number of queries to run in one session
             default is 30K transactions
         """
-        if self.neo4j_driver is None:
-            raise ConnectionError(
-                "first connect to neo4j using the method neo4j_database_connect"
-            )
-
         try:
             # splitting the transactions
-            queries_idx = list(range(len(query_list)))[::session_batch]
+            queries_idx = list(range(len(queries)))[::session_batch]
             if len(queries_idx) > 1:
                 logging.info(
                     f"{message} huge query count, doing operations in multi-session"
                 )
             for session_number, index in enumerate(queries_idx):
-                queries = query_list[index : index + session_batch]
-                with self.neo4j_driver.session(database=self.neo4j_db_name) as session:
+                batch_queries = queries[index : index + session_batch]
+                with self.neo4j_driver.session(database=self.db_name) as session:
                     with session.begin_transaction() as tx:
-                        query_count = len(queries)
-                        for idx, query in enumerate(queries):
+                        query_count = len(batch_queries)
+
+                        for idx, query_item in enumerate(batch_queries):
+                            query = query_item.query
+                            query_parameters = query_item.parameters
+
                             msg_title = "Neo4J Transaction session "
                             msg_title += f"{session_number + 1}/{len(queries_idx)}"
                             logging.info(
                                 f"{message} {msg_title}: Batch {idx + 1}/{query_count}"
                             )
-                            self._run_query(tx, query)
+                            self._run_query(tx, query, **query_parameters)
         except Exception as e:
             logging.error(f"Couldn't execute  Neo4J DB transaction, exception: {e}")

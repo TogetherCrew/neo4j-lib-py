@@ -14,8 +14,6 @@ services:
       - NEO4J_USER=neo4j
       - NEO4J_PASSWORD=password
       - NEO4J_DB=neo4j
-      - SENTRY_DSN=sample_dsn
-      - SENTRY_ENV=local
     volumes:
       - ./coverage:/project/coverage
     depends_on:
