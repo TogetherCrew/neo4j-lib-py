@@ -102,6 +102,8 @@ class Neo4jOps:
                     with session.begin_transaction() as tx:
                         query_count = len(batch_queries)
 
+                        apoc_run_queries: str = ""
+
                         for idx, query_item in enumerate(batch_queries):
                             query = query_item.query
                             query_parameters = query_item.parameters
@@ -111,6 +113,9 @@ class Neo4jOps:
                             logging.info(
                                 f"{message} {msg_title}: Batch {idx + 1}/{query_count}"
                             )
-                            self._run_query(tx, query, **query_parameters)
+
+                            apoc_run_queries += f"CALL apoc.cypher.run('{query}', {query_parameters});  "
+
+                        self._run_query(tx, f"CALL apoc.cypher.runMany('{apoc_run_queries}', {{}})")
         except Exception as e:
             logging.error(f"Couldn't execute  Neo4J DB transaction, exception: {e}")
