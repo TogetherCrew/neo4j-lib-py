@@ -116,6 +116,8 @@ class Neo4jOps:
 
                             apoc_run_queries += f"CALL apoc.cypher.run('{query}', {query_parameters});  "
 
-                        self._run_query(tx, f"CALL apoc.cypher.runMany('{apoc_run_queries}', {{}})")
+                        self._run_query(
+                            tx, f"CALL apoc.cypher.runMany('{apoc_run_queries}', {{}})"
+                        )
         except Exception as e:
             logging.error(f"Couldn't execute  Neo4J DB transaction, exception: {e}")
