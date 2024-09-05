@@ -5,3 +5,5 @@ coverage/*
 neo4j-lib/*
 __pycache__
 .env
+build/*
+*.egg-info
