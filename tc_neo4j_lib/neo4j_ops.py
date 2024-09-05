@@ -1,5 +1,6 @@
 import logging
 import threading
+from typing import Any
 
 from graphdatascience import GraphDataScience
 from neo4j import GraphDatabase, Transaction
@@ -100,24 +101,43 @@ class Neo4jOps:
                 batch_queries = queries[index : index + session_batch]
                 with self.neo4j_driver.session(database=self.db_name) as session:
                     with session.begin_transaction() as tx:
-                        query_count = len(batch_queries)
-
                         apoc_run_queries: str = ""
+                        apoc_query_params: dict[str, Any] = {}
+                        logging.info(
+                            f"Neo4J Transaction session {message}"
+                            f" {session_number + 1}/{len(queries_idx)}"
+                        )
 
-                        for idx, query_item in enumerate(batch_queries):
+                        for query_idx, query_item in enumerate(batch_queries):
                             query = query_item.query
                             query_parameters = query_item.parameters
 
-                            msg_title = "Neo4J Transaction session "
-                            msg_title += f"{session_number + 1}/{len(queries_idx)}"
-                            logging.info(
-                                f"{message} {msg_title}: Batch {idx + 1}/{query_count}"
-                            )
+                            new_query = query
+                            # updating the parameters to be unique
+                            for param_idx, (key, value) in enumerate(
+                                query_parameters.items()
+                            ):
+                                # creating a unique key for query parameter
+                                # as we're going to merge all queries together
+                                unique_key = f"{key}_{query_idx}_{param_idx}"
+                                new_query = new_query.replace(
+                                    f"${key}", "$" + unique_key
+                                )
 
-                            apoc_run_queries += f"CALL apoc.cypher.run('{query}', {query_parameters});  "
+                                apoc_query_params[unique_key] = value
+
+                            apoc_run_queries += f"{new_query}\n"
+
+                        nested_param_dict: dict[str, Any] = {}
+
+                        for key in apoc_query_params:
+                            nested_param_dict[key.replace("$", "")] = f"${key}"
 
                         self._run_query(
-                            tx, f"CALL apoc.cypher.runMany('{apoc_run_queries}', {{}})"
+                            tx,
+                            f"""CALL apoc.cypher.runMany("{apoc_run_queries}", """
+                            + f"{nested_param_dict})".replace("'", ""),
+                            **apoc_query_params,
                         )
         except Exception as e:
             logging.error(f"Couldn't execute  Neo4J DB transaction, exception: {e}")
